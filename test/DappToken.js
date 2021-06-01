@@ -1,8 +1,13 @@
 const DappToken = artifacts.require("DappToken.sol");
-const expect = require('chai').expect;
+const chai = require("chai");
+const chaiAsPromised = require("chai-as-promised");
+
+chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 
 contract('DappToken', (accounts) => {
-  let [alice, bob] = accounts;
+  let [alice, bob, fromAccount, toAccount, spendingAccount] = accounts;
   let contractInstance;
 
   beforeEach(async () => {
@@ -27,11 +32,7 @@ contract('DappToken', (accounts) => {
 
   context('with attempting transfer of tokens', async () => {
     it('reverts insufficient balance', async () => {
-      try {
-        await contractInstance.transfer.call(bob, 99999999);
-      } catch (error) {
-        expect(error.message.indexOf('revert')).to.be.at.least(0);
-      }
+        await expect(contractInstance.transfer.call(bob, 99999999)).to.eventually.be.rejectedWith('revert');
     })
     it('returns true on successful call', async () => {
       expect(await contractInstance.transfer.call(bob, 250000)).to.be.true;
@@ -51,11 +52,11 @@ contract('DappToken', (accounts) => {
     })
   })
 
-  context('with attempting delegated transfer of tokens', async () => {
+  context('with attempting approval of address for transfer of tokens', async () => {
     it('returns true on successful approve call', async () => {
       expect(await contractInstance.approve.call(bob, 100)).to.be.true;
     })
-    it('approves an address for transfer', async () => {
+    it('adds an address for transfer', async () => {
       const receipt = await contractInstance.approve(bob, 100, { from: alice });
 
       expect(receipt.logs.length).to.equal(1, 'expected one triggered event');
@@ -68,6 +69,48 @@ contract('DappToken', (accounts) => {
       await contractInstance.approve(bob, 100, { from: alice });
       const allowance = await contractInstance.allowance(alice, bob);
       expect(allowance.toNumber()).to.equal(100, 'expected allowance for bob to be 100');
+    })
+  })
+
+  context('with actual delegated token transfer', async () => {
+    it('rejects transfer for amount larger than sender\'s balance', async () => {
+      await contractInstance.transfer(fromAccount, 100, { from: alice });
+      await contractInstance.approve(spendingAccount, 10, { from: fromAccount });
+      await expect(contractInstance.transferFrom(fromAccount, toAccount, 9999, { from: spendingAccount })).to.eventually.be.rejectedWith('revert');
+    })
+    it('rejects transfer if attempting larger than approved amount', async () => {
+      await contractInstance.transfer(fromAccount, 100, { from: alice });
+      await contractInstance.approve(spendingAccount, 10, { from: fromAccount });
+      await expect(contractInstance.transferFrom(fromAccount, spendingAccount, 20, { from: spendingAccount })).to.eventually.be.rejectedWith('revert');
+    })
+    it('transfers correct amount from the fromAccount to the spendingAccount and adjusts allowance', async () => {
+      await contractInstance.transfer(fromAccount, 100, { from: alice });
+      await contractInstance.approve(spendingAccount, 10, { from: fromAccount });
+      await contractInstance.transferFrom(fromAccount, spendingAccount, 10, { from: spendingAccount });
+
+      const spendingAccountBalance = await contractInstance.balanceOf(spendingAccount)
+      const fromAccountBalance = await contractInstance.balanceOf(fromAccount);
+      const adjustedAllowance = await contractInstance.allowance(fromAccount, spendingAccount);
+
+      expect(spendingAccountBalance.toNumber()).to.equal(10, 'expected spendingAccount to have 10 tokens');
+      expect(fromAccountBalance.toNumber()).to.equal(90, 'expected fromAccount to have 90 tokens');
+      expect(adjustedAllowance.toNumber()).to.equal(0, 'expected 0 for new adjusted allowance');
+    })
+    it('emits correct Transfer event information after successful approval & transfer', async () => {
+      await contractInstance.transfer(fromAccount, 100, { from: alice });
+      await contractInstance.approve(spendingAccount, 10, { from: fromAccount });
+      const receipt = await contractInstance.transferFrom(fromAccount, spendingAccount, 10, { from: spendingAccount });
+      
+      expect(receipt.logs.length).to.equal(1, 'expected one triggered event');
+      expect(receipt.logs[0].event).to.equal('Transfer', 'expected event to be a Transfer');
+      expect(receipt.logs[0].args._from).to.equal(fromAccount, 'expected _from address to be alice');
+      expect(receipt.logs[0].args._to).to.equal(spendingAccount, 'expected receiving address to be bob');
+      expect(receipt.logs[0].args._value.toNumber()).to.equal(10, 'expected transfer value to be 10');
+    })
+    it('returns true on successful call', async () => {
+      await contractInstance.transfer(fromAccount, 100, { from: alice });
+      await contractInstance.approve(spendingAccount, 10, { from: fromAccount });
+      expect(await contractInstance.transferFrom.call(fromAccount, spendingAccount, 10, { from: spendingAccount })).to.be.true;
     })
   })
 });
