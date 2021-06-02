@@ -88,11 +88,11 @@ contract('DappToken', (accounts) => {
       await contractInstance.approve(spendingAccount, 10, { from: fromAccount });
       await contractInstance.transferFrom(fromAccount, toAccount, 10, { from: spendingAccount });
 
-      const spendingAccountBalance = await contractInstance.balanceOf(spendingAccount)
+      const spendingAccountBalance = await contractInstance.balanceOf(toAccount)
       const fromAccountBalance = await contractInstance.balanceOf(fromAccount);
-      const adjustedAllowance = await contractInstance.allowance(fromAccount, spendingAccount);
+      const adjustedAllowance = await contractInstance.allowance(fromAccount, toAccount);
 
-      expect(spendingAccountBalance.toNumber()).to.equal(10, 'expected spendingAccount to have 10 tokens');
+      expect(spendingAccountBalance.toNumber()).to.equal(10, 'expected toAccount to have 10 tokens');
       expect(fromAccountBalance.toNumber()).to.equal(90, 'expected fromAccount to have 90 tokens');
       expect(adjustedAllowance.toNumber()).to.equal(0, 'expected 0 for new adjusted allowance');
     })
@@ -104,7 +104,7 @@ contract('DappToken', (accounts) => {
       expect(receipt.logs.length).to.equal(1, 'expected one triggered event');
       expect(receipt.logs[0].event).to.equal('Transfer', 'expected event to be a Transfer');
       expect(receipt.logs[0].args._from).to.equal(fromAccount, 'expected _from address to be alice');
-      expect(receipt.logs[0].args._to).to.equal(spendingAccount, 'expected receiving address to be bob');
+      expect(receipt.logs[0].args._to).to.equal(toAccount, 'expected receiving address to be toAccount');
       expect(receipt.logs[0].args._value.toNumber()).to.equal(10, 'expected transfer value to be 10');
     })
     it('returns true on successful call', async () => {
