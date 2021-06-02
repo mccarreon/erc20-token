@@ -81,12 +81,12 @@ contract('DappToken', (accounts) => {
     it('rejects transfer if attempting larger than approved amount', async () => {
       await contractInstance.transfer(fromAccount, 100, { from: alice });
       await contractInstance.approve(spendingAccount, 10, { from: fromAccount });
-      await expect(contractInstance.transferFrom(fromAccount, spendingAccount, 20, { from: spendingAccount })).to.be.rejectedWith('revert');
+      await expect(contractInstance.transferFrom(fromAccount, toAccount, 20, { from: spendingAccount })).to.be.rejectedWith('revert');
     })
     it('transfers correct amount from the fromAccount to the spendingAccount and adjusts allowance', async () => {
       await contractInstance.transfer(fromAccount, 100, { from: alice });
       await contractInstance.approve(spendingAccount, 10, { from: fromAccount });
-      await contractInstance.transferFrom(fromAccount, spendingAccount, 10, { from: spendingAccount });
+      await contractInstance.transferFrom(fromAccount, toAccount, 10, { from: spendingAccount });
 
       const spendingAccountBalance = await contractInstance.balanceOf(spendingAccount)
       const fromAccountBalance = await contractInstance.balanceOf(fromAccount);
@@ -99,7 +99,7 @@ contract('DappToken', (accounts) => {
     it('emits correct Transfer event information after successful approval & transfer', async () => {
       await contractInstance.transfer(fromAccount, 100, { from: alice });
       await contractInstance.approve(spendingAccount, 10, { from: fromAccount });
-      const receipt = await contractInstance.transferFrom(fromAccount, spendingAccount, 10, { from: spendingAccount });
+      const receipt = await contractInstance.transferFrom(fromAccount, toAcocunt, 10, { from: spendingAccount });
       
       expect(receipt.logs.length).to.equal(1, 'expected one triggered event');
       expect(receipt.logs[0].event).to.equal('Transfer', 'expected event to be a Transfer');
