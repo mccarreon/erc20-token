@@ -99,7 +99,7 @@ contract('DappToken', (accounts) => {
     it('emits correct Transfer event information after successful approval & transfer', async () => {
       await contractInstance.transfer(fromAccount, 100, { from: alice });
       await contractInstance.approve(spendingAccount, 10, { from: fromAccount });
-      const receipt = await contractInstance.transferFrom(fromAccount, toAcocunt, 10, { from: spendingAccount });
+      const receipt = await contractInstance.transferFrom(fromAccount, toAccount, 10, { from: spendingAccount });
       
       expect(receipt.logs.length).to.equal(1, 'expected one triggered event');
       expect(receipt.logs[0].event).to.equal('Transfer', 'expected event to be a Transfer');
