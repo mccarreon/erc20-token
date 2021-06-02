@@ -32,7 +32,7 @@ contract('DappToken', (accounts) => {
 
   context('with attempting transfer of tokens', async () => {
     it('reverts insufficient balance', async () => {
-        await expect(contractInstance.transfer.call(bob, 99999999)).to.be.rejectedWith('revert');
+      await expect(contractInstance.transfer.call(bob, 99999999)).to.be.rejectedWith('revert');
     })
     it('returns true on successful call', async () => {
       expect(await contractInstance.transfer.call(bob, 250000)).to.be.true;
