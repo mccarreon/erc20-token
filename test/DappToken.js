@@ -32,7 +32,7 @@ contract('DappToken', (accounts) => {
 
   context('with attempting transfer of tokens', async () => {
     it('reverts insufficient balance', async () => {
-        await expect(contractInstance.transfer.call(bob, 99999999)).to.eventually.be.rejectedWith('revert');
+        await expect(contractInstance.transfer.call(bob, 99999999)).to.be.rejectedWith('revert');
     })
     it('returns true on successful call', async () => {
       expect(await contractInstance.transfer.call(bob, 250000)).to.be.true;
@@ -76,12 +76,12 @@ contract('DappToken', (accounts) => {
     it('rejects transfer for amount larger than sender\'s balance', async () => {
       await contractInstance.transfer(fromAccount, 100, { from: alice });
       await contractInstance.approve(spendingAccount, 10, { from: fromAccount });
-      await expect(contractInstance.transferFrom(fromAccount, toAccount, 9999, { from: spendingAccount })).to.eventually.be.rejectedWith('revert');
+      await expect(contractInstance.transferFrom(fromAccount, toAccount, 9999, { from: spendingAccount })).to.be.rejectedWith('revert');
     })
     it('rejects transfer if attempting larger than approved amount', async () => {
       await contractInstance.transfer(fromAccount, 100, { from: alice });
       await contractInstance.approve(spendingAccount, 10, { from: fromAccount });
-      await expect(contractInstance.transferFrom(fromAccount, spendingAccount, 20, { from: spendingAccount })).to.eventually.be.rejectedWith('revert');
+      await expect(contractInstance.transferFrom(fromAccount, spendingAccount, 20, { from: spendingAccount })).to.be.rejectedWith('revert');
     })
     it('transfers correct amount from the fromAccount to the spendingAccount and adjusts allowance', async () => {
       await contractInstance.transfer(fromAccount, 100, { from: alice });
