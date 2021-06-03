@@ -73,19 +73,18 @@ contract('DappToken', (accounts) => {
   })
 
   context('with actual delegated token transfer', async () => {
-    it('rejects transfer for amount larger than sender\'s balance', async () => {
+    beforeEach(() => {
       contractInstance.transfer(fromAccount, 100, { from: alice });
       contractInstance.approve(spendingAccount, 10, { from: fromAccount });
+    })
+    
+    it('rejects transfer for amount larger than sender\'s balance', async () => {
       await expect(contractInstance.transferFrom(fromAccount, toAccount, 9999, { from: spendingAccount })).to.be.rejectedWith('revert');
     })
     it('rejects transfer if attempting larger than approved amount', async () => {
-      contractInstance.transfer(fromAccount, 100, { from: alice });
-      contractInstance.approve(spendingAccount, 10, { from: fromAccount });
       await expect(contractInstance.transferFrom(fromAccount, toAccount, 20, { from: spendingAccount })).to.be.rejectedWith('revert');
     })
     it('transfers correct amount from the fromAccount to the spendingAccount and adjusts allowance', async () => {
-      contractInstance.transfer(fromAccount, 100, { from: alice });
-      contractInstance.approve(spendingAccount, 10, { from: fromAccount });
       contractInstance.transferFrom(fromAccount, toAccount, 10, { from: spendingAccount });
 
       const spendingAccountBalance = await contractInstance.balanceOf(toAccount)
@@ -97,8 +96,6 @@ contract('DappToken', (accounts) => {
       expect(adjustedAllowance.toNumber()).to.equal(0, 'expected 0 for new adjusted allowance');
     })
     it('emits correct Transfer event information after successful approval & transfer', async () => {
-      contractInstance.transfer(fromAccount, 100, { from: alice });
-      contractInstance.approve(spendingAccount, 10, { from: fromAccount });
       const receipt = await contractInstance.transferFrom(fromAccount, toAccount, 10, { from: spendingAccount });
       
       expect(receipt.logs.length).to.equal(1, 'expected one triggered event');
@@ -108,8 +105,6 @@ contract('DappToken', (accounts) => {
       expect(receipt.logs[0].args._value.toNumber()).to.equal(10, 'expected transfer value to be 10');
     })
     it('returns true on successful call', async () => {
-      contractInstance.transfer(fromAccount, 100, { from: alice });
-      contractInstance.approve(spendingAccount, 10, { from: fromAccount });
       expect(await contractInstance.transferFrom.call(fromAccount, spendingAccount, 10, { from: spendingAccount })).to.be.true;
     })
   })
