@@ -22,3 +22,8 @@ I noticed the ERC20 standard has changed quite a bit since their video was made.
 * totalSupply is a private variable in the current ERC20 standard from OpenZeppelin
 * Minting is done differently with a function now, rather than creating the supply & sending tokens separately
 * I should be extending OpenZeppelin's ERC20
+
+## TODO
+* Refactor TokenSale buying tokens tests to utilize `beforeEach()` better
+    + potentially separate into two contexts?
+* Add safemath
