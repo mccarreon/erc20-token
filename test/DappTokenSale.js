@@ -79,4 +79,29 @@ contract('DappTokenSale', (accounts) => {
       expect(buyerBalance.toNumber()).to.equal(numberOfTokens, 'expected buyer to have 10 tokens');
     })
   })
+
+  context('with ending token sale', async () => {
+    it('fails to end sale from non-admin account', async () => {
+      await expect(tokenSaleInstance.endSale({ from: buyer })).to.be.rejectedWith('revert');
+    })
+    it('admin can end sale', async () => {
+      const receipt = await tokenSaleInstance.endSale({ from: admin });
+      expect(receipt).to.exist;
+    })
+    it('returns unsold tokens to admin', async () => {
+      const numberOfTokens = 10;
+      const value = numberOfTokens * tokenPrice;
+      tokenSaleInstance.buyTokens(numberOfTokens, { from: buyer, value: value });
+      tokenSaleInstance.endSale({ from: admin });
+
+      const adminBalance = await tokenInstance.balanceOf(admin);
+      
+      expect(adminBalance.toNumber()).to.equal(999990, 'expected initial 1,000,000 - 10 coins');
+    })
+    it('ensures contract is no longer functional', async () => {
+      tokenSaleInstance.endSale({ from: admin });
+
+      await expect(tokenSaleInstance.tokenPrice()).to.eventually.be.rejected;
+    })
+  })
 })
