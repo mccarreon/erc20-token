@@ -27,3 +27,4 @@ I noticed the ERC20 standard has changed quite a bit since their video was made.
 * Refactor TokenSale buying tokens tests to utilize `beforeEach()` better
     + potentially separate into two contexts?
 * Add safemath
+* Use ownable contracts?
